@@ -1,0 +1,363 @@
+/* ── Gantt layout: sticky left columns ───────────────────────── */
+.gantt-wrapper {
+  margin: 0 32px 32px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.gantt-scroll {
+  overflow: auto;
+  max-height: calc(100vh - 120px);
+}
+
+.gantt-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+}
+
+.gantt-table th,
+.gantt-table td {
+  padding: 10px 8px;
+  font-size: 13px;
+  vertical-align: middle;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+
+.gantt-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--card-alt);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  z-index: 3;
+}
+
+.gantt-table tbody td { background: var(--card); }
+.gantt-table tbody tr:hover td { background: var(--hover-row); }
+.gantt-table tbody tr:last-child td { border-bottom: none; }
+
+/* Sticky columns */
+.sticky-col { position: sticky; z-index: 2; }
+
+thead .sticky-col { z-index: 5 !important; }
+tbody .sticky-col { background: var(--card); }
+tbody tr:hover .sticky-col { background: var(--hover-row); }
+
+.col-module { font-weight: 600; }
+.col-detail { overflow: hidden; text-overflow: ellipsis; }
+.col-version { font-size: 12px; color: var(--text-muted); }
+.col-end { font-size: 12px; color: var(--text-muted); }
+
+/* ── Column resize handle ────────────────────────────────────── */
+.col-resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  z-index: 10;
+}
+
+.col-resize-handle:hover,
+.col-resize-handle:active {
+  background: var(--primary);
+  opacity: 0.3;
+}
+
+.resize-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 9999;
+  cursor: col-resize;
+}
+
+/* ── Sortable headers ────────────────────────────────────────── */
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.sortable:hover {
+  color: var(--text);
+}
+
+.sort-icon {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 10px;
+  opacity: 0.35;
+  transition: opacity 0.15s;
+}
+
+.sortable:hover .sort-icon { opacity: 0.6; }
+.sort-icon.active { opacity: 1; color: var(--primary); }
+
+/* ── Group rows ──────────────────────────────────────────────── */
+.group-row td {
+  background: var(--card-alt) !important;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 12px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.group-row:hover td {
+  background: var(--hover-row) !important;
+}
+
+.group-label-cell {
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 4 !important;
+  background: var(--card-alt) !important;
+}
+
+.group-row:hover .group-label-cell {
+  background: var(--hover-row) !important;
+}
+
+.group-timeline-cell {
+  background: var(--card-alt) !important;
+}
+
+.group-row:hover .group-timeline-cell {
+  background: var(--hover-row) !important;
+}
+
+.group-toggle {
+  display: inline-block;
+  width: 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+  transition: transform 0.15s;
+}
+
+.group-toggle.collapsed {
+  transform: rotate(-90deg);
+}
+
+.group-count {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+
+.group-hidden {
+  display: none;
+}
+
+/* Month header cells */
+.month-col { min-width: 70px; }
+.month-header-current { background: #eef2ff !important; }
+html.dark .month-header-current { background: #312e81 !important; }
+
+/* Status badge */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.badge-complete    { background: var(--complete-bg);    color: var(--complete-text); }
+.badge-wip         { background: var(--wip-bg);         color: var(--wip-text); }
+.badge-pending     { background: var(--pending-bg);     color: var(--pending-text); }
+.badge-requirement { background: var(--requirement-bg); color: var(--requirement-text); }
+.badge-todo        { background: var(--todo-bg);        color: var(--todo-text); }
+
+/* Timeline bar area */
+.timeline-cell { position: relative; height: 28px; overflow: hidden; }
+
+.bar {
+  position: absolute; height: 22px; top: 3px; border-radius: 4px;
+  min-width: 6px; opacity: 0.85; cursor: default; transition: opacity 0.15s;
+}
+.bar:hover { opacity: 1; }
+.bar-complete    { background: var(--complete); }
+.bar-wip         { background: var(--wip); }
+.bar-pending     { background: var(--pending); }
+.bar-requirement { background: var(--requirement); }
+.bar-todo        { background: var(--todo); }
+
+.bar-actual {
+  position: absolute; height: 6px; bottom: -1px; border-radius: 3px;
+  background: #065f46; opacity: 0.5;
+}
+
+/* Comment icon on bar */
+.bar-comment-icon {
+  position: absolute;
+  right: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  color: #fff;
+  opacity: 0.8;
+  cursor: pointer;
+  z-index: 2;
+  pointer-events: auto;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.bar-comment-icon:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.2);
+}
+
+.bar-comment-icon svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Comment popover */
+.comment-popover {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  width: 300px;
+  max-height: 260px;
+  overflow: hidden;
+}
+
+.comment-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text);
+  gap: 8px;
+}
+
+.comment-popover-header strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.comment-popover-close {
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  padding: 0 2px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.comment-popover-close:hover {
+  background: var(--hover-row);
+  color: var(--text);
+}
+
+.comment-popover-body {
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-y: auto;
+  max-height: 200px;
+}
+
+/* Bar date labels */
+.bar-date {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.bar-date-start { right: calc(100% + 4px); }
+.bar-date-end   { left: calc(100% + 4px); }
+
+/* Today marker */
+.today-line {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 2px;
+  background: #ef4444;
+  opacity: 0.7;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.today-label {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ef4444;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+  letter-spacing: .3px;
+}
+
+/* Today column highlight */
+.today-highlight {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 2px;
+  background: #ef4444;
+  opacity: 0.15;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.month-header-today {
+  position: relative;
+}
+.month-header-today::after {
+  content: 'Today';
+  display: block;
+  font-size: 8px;
+  color: #ef4444;
+  font-weight: 700;
+  letter-spacing: .3px;
+  margin-top: 2px;
+}
+
+/* Tooltip */
+.tooltip {
+  display: none; position: fixed;
+  background: #1e293b; color: #fff;
+  padding: 8px 12px; border-radius: 6px;
+  font-size: 12px; line-height: 1.5;
+  z-index: 999; pointer-events: none;
+  max-width: 300px;
+}
+
+.no-data {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-muted);
+  font-size: 14px;
+}

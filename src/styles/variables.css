@@ -1,0 +1,48 @@
+:root {
+  --bg: #f8f9fa;
+  --card: #ffffff;
+  --card-alt: #f7f8fb;
+  --border: #e2e8f0;
+  --text: #1a202c;
+  --text-muted: #718096;
+  --primary: #4f46e5;
+  --hover-row: #fafbfe;
+
+  --complete: #10b981;
+  --complete-bg: #d1fae5;
+  --complete-text: #065f46;
+  --wip: #f59e0b;
+  --wip-bg: #fef3c7;
+  --wip-text: #92400e;
+  --pending: #6366f1;
+  --pending-bg: #e0e7ff;
+  --pending-text: #3730a3;
+  --requirement: #8b5cf6;
+  --requirement-bg: #ede9fe;
+  --requirement-text: #5b21b6;
+  --todo: #64748b;
+  --todo-bg: #f1f5f9;
+  --todo-text: #475569;
+}
+
+html.dark {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --card-alt: #253347;
+  --border: #334155;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --primary: #818cf8;
+  --hover-row: #263045;
+
+  --complete-bg: #064e3b;
+  --complete-text: #6ee7b7;
+  --wip-bg: #78350f;
+  --wip-text: #fde68a;
+  --pending-bg: #312e81;
+  --pending-text: #c7d2fe;
+  --requirement-bg: #4c1d95;
+  --requirement-text: #ddd6fe;
+  --todo-bg: #334155;
+  --todo-text: #cbd5e1;
+}
