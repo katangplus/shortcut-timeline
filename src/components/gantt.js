@@ -32,10 +32,19 @@ export function initColumnToggle(onRender) {
   const container = document.getElementById('columnToggle');
   const dropdown = container.querySelector('.multi-select-dropdown');
 
+  // On mobile, default to showing only "detail" column
+  const isMobile = window.innerWidth <= 768;
+  if (isMobile) {
+    COLUMNS.forEach((col) => {
+      col.visible = col.key === 'detail';
+    });
+  }
+
   let html = '';
   COLUMNS.forEach((col) => {
+    const checked = col.visible ? ' checked' : '';
     html += `<label class="ms-option">
-      <input type="checkbox" value="${col.key}" checked /> ${col.label}
+      <input type="checkbox" value="${col.key}"${checked} /> ${col.label}
     </label>`;
   });
   dropdown.innerHTML = html;

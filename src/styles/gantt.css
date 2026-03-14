@@ -361,3 +361,10 @@ html.dark .month-header-current { background: #312e81 !important; }
   color: var(--text-muted);
   font-size: 14px;
 }
+
+/* ── Mobile responsive ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  .gantt-wrapper {
+    margin: 0 4px 16px;
+  }
+}

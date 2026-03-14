@@ -335,8 +335,8 @@
     left: 0;
     right: 0;
     width: 100%;
-    height: auto;
-    max-height: 85vh;
+    height: 90vh;
+    max-height: 90vh;
     border-left: none;
     border-top: 1px solid var(--border);
     border-radius: 16px 16px 0 0;
@@ -363,10 +363,6 @@
 
   .fp-divider {
     grid-column: 1;
-  }
-
-  .gantt-wrapper {
-    margin: 0 8px 16px;
   }
 
   .summary {
