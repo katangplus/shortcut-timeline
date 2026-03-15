@@ -1,26 +1,17 @@
-import { SHEET_ID, SHEET_GID } from './config.js';
+import { SHEET_ID, SHEET_NAME } from './config.js';
+import { getAccessToken } from './auth.js';
 
 /**
- * Parse a gviz date cell into ISO date string (YYYY-MM-DD).
- * Handles both "Date(y,m,d)" format and formatted text values.
+ * Parse a date string into ISO date (YYYY-MM-DD).
+ * Handles: "D Mon YYYY", "YYYY-MM-DD", "MM/DD/YYYY", etc.
  */
-function parseGvizDate(cell) {
-  if (!cell) return null;
+function parseDate(val) {
+  if (!val) return null;
+  const str = String(val).trim();
+  if (!str) return null;
 
-  // gviz returns dates as "Date(year,month,day)" where month is 0-indexed
-  if (cell.v && typeof cell.v === 'string' && cell.v.startsWith('Date(')) {
-    const nums = cell.v.match(/Date\((\d+),(\d+),(\d+)\)/);
-    if (nums) {
-      const d = new Date(+nums[1], +nums[2], +nums[3]);
-      return d.toISOString().slice(0, 10);
-    }
-  }
-
-  const fv = (cell.f || cell.v || '').toString().trim();
-  if (!fv) return null;
-
-  // Try "D Mon YYYY" format
-  const parts = fv.match(/(\d{1,2})\s+(\w+)\s+(\d{4})/);
+  // "D Mon YYYY" or "DD Mon YYYY"
+  const parts = str.match(/(\d{1,2})\s+(\w+)\s+(\d{4})/);
   if (parts) {
     const months = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
     const m = months[parts[2]];
@@ -29,34 +20,41 @@ function parseGvizDate(cell) {
     }
   }
 
-  // Try ISO-ish
-  const iso = new Date(fv);
+  // Google Sheets serial date number (days since 1899-12-30)
+  if (/^\d{5}$/.test(str)) {
+    const d = new Date(1899, 11, 30 + Number(str));
+    return d.toISOString().slice(0, 10);
+  }
+
+  // ISO or other parseable format
+  const iso = new Date(str);
   if (!isNaN(iso)) return iso.toISOString().slice(0, 10);
 
   return null;
 }
 
-function cellValue(cell) {
-  if (!cell) return '';
-  return (cell.f || (cell.v != null ? String(cell.v) : '')).trim();
-}
-
 /**
- * Convert a gviz table response into our data model.
+ * Convert Sheets API v4 values array into our data model.
+ * First row is the header; data starts from row 2.
+ * Columns: A=?, B=no, C=module, D=detail, E=start, F=end, G=status, H=version, I=completed, J=comment
  */
-function gvizToData(table) {
+function valuesToData(values) {
+  if (!values || values.length < 2) return [];
+
   const items = [];
-  for (const row of table.rows) {
-    const c = row.c || [];
-    const no = c[1] && c[1].v ? Number(c[1].v) : 0;
-    const module = cellValue(c[2]);
-    const detail = cellValue(c[3]);
-    const start = parseGvizDate(c[4]);
-    const end = parseGvizDate(c[5]);
-    const status = cellValue(c[6]);
-    const version = cellValue(c[7]);
-    const completed = parseGvizDate(c[8]);
-    const comment = cellValue(c[9]);
+  for (let i = 1; i < values.length; i++) {
+    const row = values[i];
+    if (!row || row.length === 0) continue;
+
+    const no = row[1] ? Number(row[1]) : 0;
+    const module = (row[2] || '').trim();
+    const detail = (row[3] || '').trim();
+    const start = parseDate(row[4]);
+    const end = parseDate(row[5]);
+    const status = (row[6] || '').trim();
+    const version = (row[7] || '').trim();
+    const completed = parseDate(row[8]);
+    const comment = (row[9] || '').trim();
 
     if (!module && !detail && !status) continue;
     items.push({ no, module, detail, start, end, status, version, completed, comment });
@@ -65,48 +63,20 @@ function gvizToData(table) {
 }
 
 /**
- * Fetch data from Google Sheets using the gviz JSONP API.
- * Works cross-origin without any server proxy.
+ * Fetch data from Google Sheets using the Sheets API v4 (authenticated).
  */
-export function fetchSheetData() {
-  return new Promise((resolve, reject) => {
-    const callbackName = '_gvizCb_' + Date.now();
-    const script = document.createElement('script');
+export async function fetchSheetData() {
+  const token = getAccessToken();
+  if (!token) throw new Error('Not authenticated');
 
-    const timer = setTimeout(() => {
-      cleanup();
-      reject(new Error('Request timed out'));
-    }, 15000);
-
-    function cleanup() {
-      clearTimeout(timer);
-      delete window[callbackName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-    }
-
-    window[callbackName] = function (response) {
-      cleanup();
-      try {
-        if (response.status === 'error') {
-          reject(new Error(response.errors.map((e) => e.message).join(', ')));
-          return;
-        }
-        resolve(gvizToData(response.table));
-      } catch (e) {
-        reject(e);
-      }
-    };
-
-    const url =
-      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq` +
-      `?tqx=out:json;responseHandler:${callbackName}` +
-      `&gid=${SHEET_GID}&_t=${Date.now()}`;
-
-    script.src = url;
-    script.onerror = () => {
-      cleanup();
-      reject(new Error('Network error loading sheet'));
-    };
-    document.body.appendChild(script);
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME)}?valueRenderOption=FORMATTED_VALUE`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
   });
+
+  if (res.status === 401) throw new Error('Session expired. Please sign in again.');
+  if (!res.ok) throw new Error(`Sheets API error: ${res.status}`);
+
+  const data = await res.json();
+  return valuesToData(data.values);
 }
